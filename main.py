@@ -1,3 +1,6 @@
+import asyncio
+import time
+
 import PySimpleGUI as sg
 import bcrypt
 import re
@@ -112,32 +115,31 @@ while True:
 
     if event == 'Sign In':
         mycursor = mydb.cursor()
-        sql_art1 = f"SELECT KUNDE.Passwd From KUNDE Where KUNDE.EMAIL = '{values['_Email_']}'"
-        mycursor.execute(sql_art1)
-        psw = values["_Passwd_"]
-        pswd = (mycursor.fetchone()[0])
-        psw = pswd.encode("utf-8")
+        sql_pswd = f"SELECT KUNDE.Passwd From KUNDE Where KUNDE.EMAIL = '{values['_Email_']}'"
+        mycursor.execute(sql_pswd)
+        db_password = mycursor.fetchone()[0]
+        print("db_password: " + db_password)
+        sql_salt = f"SELECT KUNDE.SALT From KUNDE Where KUNDE.EMAIL = '{values['_Email_']}'"
+        mycursor.execute(sql_salt)
+        db_salt = b'$2b$12$dm600OsnPaFH6kdTq8gSeu'
+
+        user_password = values['_Passwd_'].encode()
+        print(values['_Passwd_'])
+
+
 
         hashed = bcrypt.hashpw(
-            psw,
-            bcrypt.gensalt()
+            user_password,
+            db_salt
         )
+        print(hashed)
 
-        print(hashed.decode("utf-8"))
-        print("db"+pswd)
-
-        if hashed == pswd:
+        if hashed == db_password:
             print("login ok")
             window['-COL2-'].update(visible=False)
             window['-COL3-'].update(visible=True)
-
-
-
-            print(email)
         else:
             print("fail")
-        mydb.commit()
-        mycursor.close()
 
     if event == 'My Account':
         email.append("hallo")
